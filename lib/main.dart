@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: AppRoutes.loginPage,
+      initialRoute: AppRoutes.bottomNavbar,
       onGenerateRoute: onGenerateRoute,
     );
   }
