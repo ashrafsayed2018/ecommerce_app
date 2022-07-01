@@ -30,7 +30,6 @@ Route<dynamic> onGenerateRoute(RouteSettings settings) {
       );
 
     default:
-      return MaterialPageRoute(
-          builder: (context) => Text('Unknown route: ${settings.name}'));
+      return MaterialPageRoute(builder: (context) => const LandingPage());
   }
 }

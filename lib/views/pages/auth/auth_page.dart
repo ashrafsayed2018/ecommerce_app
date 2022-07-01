@@ -1,9 +1,10 @@
+import 'package:ecommerce_tarek_alabd/controllers/auth_controller.dart';
 import 'package:ecommerce_tarek_alabd/utilities/enums.dart';
+import 'package:ecommerce_tarek_alabd/utilities/routes.dart';
 import 'package:ecommerce_tarek_alabd/views/widgets/custom_input.dart';
 import 'package:ecommerce_tarek_alabd/views/widgets/main_button.dart';
 import 'package:flutter/material.dart';
-
-import '../../../utilities/routes.dart';
+import 'package:provider/provider.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({Key? key}) : super(key: key);
@@ -18,7 +19,40 @@ class _AuthPageState extends State<AuthPage> {
   final TextEditingController _passwordController = TextEditingController();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
-  AuthFormType _authFormType = AuthFormType.login;
+
+  Future<void> _submit(AuthController model) async {
+    try {
+      await model.submit();
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacementNamed(AppRoutes.bottomNavbar);
+    } catch (e) {
+      debugPrint("here me");
+      // TODO: we will refactor this code later in a separate widget
+      showDialog(
+          context: context,
+          builder: (_) {
+            return AlertDialog(
+              title: Text(
+                "Error",
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
+              content: Text(
+                e.toString(),
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("موافق"))
+              ],
+            );
+          });
+    }
+  }
 
   @override
   void dispose() {
@@ -29,170 +63,171 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 40),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  _authFormType == AuthFormType.login
-                      ? Text(
-                          'Login',
-                          style: Theme.of(context).textTheme.headline4,
-                        )
-                      : Text(
-                          'Register',
-                          style: Theme.of(context).textTheme.headline4,
-                        ),
-                  const SizedBox(height: 64),
-                  CustomInput(
-                    hintText: "Enter your Email",
-                    labelText: "Email",
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    isPassowrd: false,
-                    focusNode: _emailFocusNode,
-                    onEditingComplete: () {
-                      FocusScope.of(context).requestFocus(_passwordFocusNode);
-                    },
-                    validate: (value) {
-                      if (value!.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter @ sign';
-                      }
-
-                      if (!value.contains("gmail") &&
-                          !value.contains("yahoo")) {
-                        return 'Please enter yahoo or gmail email';
-                      }
-                      if (!value.contains(".com")) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  CustomInput(
-                    hintText: "Enter your password",
-                    labelText: "Password",
-                    controller: _passwordController,
-                    keyboardType: TextInputType.text,
-                    isPassowrd: true,
-                    focusNode: _passwordFocusNode,
-                    onEditingComplete: () {
-                      // FocusScope.of(context).requestFocus(_emailFocusNode);
-                    },
-                    validate: (value) {
-                      if (value!.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  _authFormType == AuthFormType.login
-                      ? InkWell(
-                          onTap: () {},
-                          child: const Text(
-                            "Forget your Password ?",
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
+    final deviceSize = MediaQuery.of(context).size;
+    return Consumer<AuthController>(
+      builder: (_, model, __) => Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Container(
+              height: deviceSize.height,
+              padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 40),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    model.authFormType == AuthFormType.login
+                        ? Text(
+                            'دخول',
+                            style: Theme.of(context).textTheme.headline4,
+                          )
+                        : Text(
+                            'تسجيل',
+                            style: Theme.of(context).textTheme.headline4,
                           ),
-                        )
-                      : const SizedBox(
-                          height: 16,
-                        ),
-                  const SizedBox(height: 20),
-                  MianButton(
-                    text: _authFormType == AuthFormType.login
-                        ? 'Login'
-                        : "Register",
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        Navigator.pushNamed(context, AppRoutes.homePage);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        _emailController.clear();
-                        _passwordController.clear();
-                        _formKey.currentState!.reset();
-                        if (_authFormType == AuthFormType.login) {
-                          _authFormType = AuthFormType.register;
-                        } else {
-                          _authFormType = AuthFormType.login;
+                    const SizedBox(height: 20),
+                    CustomInput(
+                      onChanged: model.updateEmail,
+                      hintText: "البريد الإلكتروني",
+                      labelText: "البريد الإلكتروني",
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      isPassowrd: false,
+                      focusNode: _emailFocusNode,
+                      icon: const Icon(Icons.email_outlined),
+                      onEditingComplete: () {
+                        FocusScope.of(context).requestFocus(_passwordFocusNode);
+                      },
+                      validate: (value) {
+                        if (value!.isEmpty) {
+                          return 'البريد الإلكتروني مطلوب';
                         }
-                      });
-                    },
-                    child: _authFormType == AuthFormType.login
-                        ? const Text(
-                            "Don't have an account ?",
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
+                        if (!value.contains('@')) {
+                          return 'البريد الإلكتروني غير صحيح';
+                        }
+
+                        if (!value.contains("gmail") &&
+                            !value.contains("yahoo")) {
+                          return 'البريد الإلكتروني غير صحيح';
+                        }
+                        if (!value.contains(".com")) {
+                          return 'البريد الإلكتروني غير صحيح';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    CustomInput(
+                      onChanged: model.updatePassword,
+                      hintText: "كلمة المرور",
+                      labelText: "كلمة المرور",
+                      controller: _passwordController,
+                      keyboardType: TextInputType.text,
+                      isPassowrd: true,
+                      focusNode: _passwordFocusNode,
+                      icon: const Icon(Icons.lock_outline),
+                      onEditingComplete: () {
+                        // FocusScope.of(context).requestFocus(_emailFocusNode);
+                      },
+                      validate: (value) {
+                        if (value!.isEmpty) {
+                          return 'كلمة المرور مطلوبة';
+                        }
+                        if (value.length < 6) {
+                          return 'كلمة المرور يجب أن تكون أكثر من 6 أحرف';
+                        }
+
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    model.authFormType == AuthFormType.login
+                        ? InkWell(
+                            onTap: () {},
+                            child: const Text(
+                              "نسيت كلمة المرور؟",
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           )
-                        : const Text(
-                            "Already have an account ?",
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        : const SizedBox(
+                            height: 24,
                           ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      "Or Login with Social Media",
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
+                    const SizedBox(height: 20),
+                    MianButton(
+                      text: model.authFormType == AuthFormType.login
+                          ? 'دخول'
+                          : "تسجيل",
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _submit(model);
+                        }
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: Colors.white,
+                    const SizedBox(height: 20),
+                    InkWell(
+                      onTap: () {
+                        model.toggleFormType();
+                      },
+                      child: model.authFormType == AuthFormType.login
+                          ? const Text(
+                              "ليس لديك حساب؟ سجل الآن",
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : const Text(
+                              "هل لديك حساب؟ دخول",
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        "او تسجيل بواسطة",
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.bold,
                         ),
-                        child: const Icon(Icons.facebook),
+                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(width: 16),
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: Colors.white,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.white,
+                          ),
+                          child: const Icon(Icons.facebook),
                         ),
-                        child: const Icon(Icons.add),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 16),
+                        Container(
+                          width: 80,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.white,
+                          ),
+                          child: const Icon(Icons.add),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

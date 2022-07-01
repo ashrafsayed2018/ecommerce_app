@@ -1,4 +1,5 @@
 import 'package:ecommerce_tarek_alabd/views/pages/home_page.dart';
+import 'package:ecommerce_tarek_alabd/views/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
 
@@ -16,7 +17,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
       Center(child: Text("التسوق")),
       Center(child: Text("السله")),
       Center(child: Text("المفضله")),
-      Center(child: Text("الحساب")),
+      ProfilePage(),
     ];
   }
 

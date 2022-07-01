@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
 
-// TODO: temp code until we refactor to separate class with a separte context
+  // TODO: temp code until we refactor to separate class with a separate context
   Widget _buildHeaderOfList(
     BuildContext context, {
     required String title,
